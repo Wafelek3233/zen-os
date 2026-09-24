@@ -289,28 +289,28 @@
 <script>
   /* ================================================================
      ZEN OS SITE CONFIG
-     Namespace "zen-os-project" on Tallywire — free, no-signup counter.
-     To change the ISO link: update ISO_LINK below and redeploy.
-     To see live download stats: https://tallywire.cronpulse.workers.dev/s/zen-os-project/iso-downloads
+     The site reads website/site-config.json at load. Zen Tool (the admin
+     app) rewrites that file and pushes it, so the ISO link + download
+     numbers change WITHOUT editing this HTML. The values below are only
+     fallbacks, used when the JSON is missing (e.g. opened straight from disk).
   ================================================================ */
+  var DEFAULTS = {
+    isoUrl: 'https://mega.nz/file/Cqp3SShA#DULPhdtGdgzKFy2kLMCToeB31864Thkb1s-OmOaeyiM',
+    buttonLabel: 'Download ISO (Beta)',
+    downloadMode: 'auto',   // 'auto' = live Tallywire count | 'manual' = fixed downloadCount
+    downloadCount: 0
+  };
   var TALLYWIRE = 'https://tallywire.cronpulse.workers.dev';
   var TW_NS     = 'zen-os-v1';
   var TW_KEY    = 'iso-downloads';
 
-  /* ================================================================
-     ISO LINK — change this one line to update the download button
-  ================================================================ */
-  var ISO_LINK = 'https://mega.nz/file/aqIhHTrL#DtnLADyHUaCP1ckj_Oq6z0kDD1M4ulbdORwhEfY7qWI';
-
-  /* Apply ISO link to the Download button */
-  document.getElementById('download').href = ISO_LINK;
-
-  /* ---- Download counter (Tallywire — real global count) ---- */
+  /* ---- ISO link + download counter (config-driven) ---- */
   (function(){
     var el  = document.getElementById('dlCount');
     var btn = document.getElementById('download');
+    var lbl = document.getElementById('dlLabel');
 
-    function animateTo(target, current) {
+    function animateTo(target, current){
       current = current || 0;
       var t0 = null;
       (function up(ts){
@@ -320,29 +320,36 @@
         if (k < 1) requestAnimationFrame(up);
       })(performance.now());
     }
+    function pop(){ el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
 
-    /* Read current count on page load (no increment) */
-    fetch(TALLYWIRE + '/get/' + TW_NS + '/' + TW_KEY)
-      .then(function(r){ return r.json(); })
-      .then(function(d){
-        var n = d.value || 0;
-        animateTo(n, 0);
-      })
-      .catch(function(){ el.textContent = '—'; });
-
-    /* Increment on Download click */
-    btn.addEventListener('click', function(){
-      fetch(TALLYWIRE + '/hit/' + TW_NS + '/' + TW_KEY + '?unique=1')
+    function setupAuto(){
+      fetch(TALLYWIRE + '/get/' + TW_NS + '/' + TW_KEY)
         .then(function(r){ return r.json(); })
-        .then(function(d){
-          var n = d.value || 0;
-          animateTo(n, parseInt(el.textContent.replace(/[^0-9]/g,'')) || 0);
-          el.classList.remove('pop');
-          void el.offsetWidth;
-          el.classList.add('pop');
-        })
-        .catch(function(){});
-    });
+        .then(function(d){ animateTo(d.value || 0, 0); })
+        .catch(function(){ el.textContent = '—'; });
+      btn.addEventListener('click', function(){
+        fetch(TALLYWIRE + '/hit/' + TW_NS + '/' + TW_KEY + '?unique=1')
+          .then(function(r){ return r.json(); })
+          .then(function(d){ animateTo(d.value || 0, parseInt(el.textContent.replace(/[^0-9]/g,'')) || 0); pop(); })
+          .catch(function(){ pop(); });
+      });
+    }
+    function setupManual(n){
+      animateTo(n, 0);                       // manual = admin owns the number
+      btn.addEventListener('click', pop);    // click animates but does not change it
+    }
+
+    function boot(cfg){
+      if (cfg.isoUrl) btn.href = cfg.isoUrl;
+      if (cfg.buttonLabel && lbl) lbl.textContent = cfg.buttonLabel;
+      if (cfg.downloadMode === 'manual') setupManual(cfg.downloadCount || 0);
+      else setupAuto();
+    }
+
+    fetch('site-config.json?t=' + Date.now(), { cache: 'no-store' })
+      .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(cfg){ boot(Object.assign({}, DEFAULTS, cfg)); })
+      .catch(function(){ boot(DEFAULTS); });   // file:// or missing config -> fallbacks
   })();
 
   /* ---- Motion: aurora parallax, cursor glow, magnetic buttons, card tilt, scroll reveal ---- */
