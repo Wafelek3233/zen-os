@@ -106,6 +106,45 @@
     font-weight:300;text-shadow:0 1px 14px rgba(0,0,0,.85)}
   .hero .beta-note b{color:var(--ring);font-weight:600}
 
+  /* ---------- DOWNLOAD MODAL (ISO + Zen Writer + instructions) ---------- */
+  .modal-backdrop{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;
+    padding:24px;background:rgba(2,1,6,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  .modal-backdrop.show{display:flex}
+  .modal-card{position:relative;width:100%;max-width:640px;max-height:88vh;overflow:auto;text-align:left;
+    border:1px solid rgba(255,255,255,.12);background:rgba(8,5,18,.94);border-radius:24px;
+    padding:34px 30px 28px;box-shadow:0 30px 90px rgba(88,28,135,.45);
+    animation:modalIn .35s cubic-bezier(.2,.8,.2,1)}
+  @keyframes modalIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+  .modal-close{position:absolute;top:16px;right:16px;width:34px;height:34px;border-radius:50%;
+    border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:var(--muted);
+    font-size:17px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    transition:border-color .25s ease,color .25s ease,background .25s ease}
+  .modal-close:hover{border-color:rgba(var(--violet),.6);color:#fff;background:rgba(var(--violet),.15)}
+  .modal-card h3{font-size:22px;font-weight:800;letter-spacing:.02em;margin-bottom:6px}
+  .modal-sub{color:var(--muted);font-size:13.5px;line-height:1.6;font-weight:300;margin-bottom:24px;padding-right:26px}
+  .modal-opts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+  .modal-opt{display:flex;flex-direction:column;gap:10px}
+  .modal-opt .btn{justify-content:center;padding:14px 20px}
+  .modal-opt p{color:var(--muted);font-size:12.5px;line-height:1.6;font-weight:300}
+  .modal-opt p b{color:#c6cdd9;font-weight:600}
+  .modal-os{border:1px solid rgba(255,255,255,.09);background:rgba(0,0,0,.35);border-radius:16px;
+    overflow:hidden;transition:border-color .3s ease}
+  .modal-os:hover{border-color:rgba(139,92,246,.3)}
+  .modal-os summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:14px;
+    padding:16px 20px;font:600 14px 'Inter',sans-serif;color:var(--text);cursor:pointer}
+  .modal-os summary::-webkit-details-marker{display:none}
+  .modal-os summary .pm{flex:none;width:22px;height:22px;border-radius:50%;border:1px solid rgba(255,255,255,.25);
+    display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1;color:var(--muted);
+    transition:transform .35s ease,border-color .3s ease,color .3s ease}
+  .modal-os[open] summary .pm{transform:rotate(45deg);border-color:rgba(139,92,246,.6);color:#c4b5fd}
+  .os-instr{padding:2px 20px 18px}
+  .os-instr p{color:var(--muted);font-size:13px;line-height:1.7;font-weight:300;margin-top:8px}
+  .os-instr .os-label{display:block;color:var(--ring);font-size:11px;font-weight:700;letter-spacing:.16em;margin:18px 0 2px}
+  .os-instr pre{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;
+    padding:12px 14px;margin-top:8px;overflow-x:auto;font:12.5px/1.65 ui-monospace,Consolas,"Courier New",monospace;color:#c9d4e6}
+  .os-instr code{font-family:ui-monospace,Consolas,"Courier New",monospace;font-size:12px;
+    background:rgba(255,255,255,.08);padding:1.5px 6px;border-radius:6px;color:#dcd6ff;white-space:nowrap}
+
   section{position:relative;z-index:2;padding:70px 0}
   h2{font-size:clamp(26px,4vw,38px);font-weight:800;letter-spacing:.02em;margin-bottom:12px}
   .sub{color:var(--muted);font-size:15.5px;line-height:1.6;max-width:640px;margin-bottom:36px;font-weight:300}
@@ -156,6 +195,8 @@
 
   @media(max-width:760px){
     .grid{grid-template-columns:1fr}
+    .modal-opts{grid-template-columns:1fr}
+    .modal-card{padding:30px 20px 22px}
     nav{display:none}
   }
 </style>
@@ -219,7 +260,7 @@
          (banner, name, version), and a confirmed, non-destructive install plan.</p></div>
     <div class="card reveal"><h3><span class="ic">⤓</span>Made to be installed</h3>
       <p>A graphical installer with language selection, a 3-second-confirmation safety step for storage,
-         and a Windows USB writer so you can flash the ISO without touching a terminal.</p></div>
+         and Zen Writer for Windows so you can flash the ISO without touching a terminal.</p></div>
   </div>
 </div></section>
 
@@ -303,6 +344,71 @@
   Open source coming soon.
 </footer>
 
+<!-- Download modal: pick the ISO, grab Zen Writer for Windows, or read the Linux/macOS instructions -->
+<div class="modal-backdrop" id="dlModal" role="dialog" aria-modal="true" aria-labelledby="dlModalTitle">
+  <div class="modal-card">
+    <button class="modal-close" id="dlModalClose" type="button" aria-label="Close">&times;</button>
+    <h3 id="dlModalTitle">Download Zen OS</h3>
+    <p class="modal-sub">Beta software — expect a few rough edges, virtual machines especially.
+       Two steps: get the system image, then put it on a USB stick.</p>
+    <div class="modal-opts">
+      <div class="modal-opt">
+        <a class="btn btn-white" id="modalDl" href="https://mega.nz/file/Cqp3SShA#DULPhdtGdgzKFy2kLMCToeB31864Thkb1s-OmOaeyiM" target="_blank" rel="noopener">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 20h16"/></svg>
+          <span id="modalDlLabel">Download ISO (Beta)</span>
+        </a>
+        <p><b>Step 1 — the system image.</b> Hosted on MEGA. Download it first; you'll write it to a USB
+           stick next, using Zen Writer or your system's own tools.</p>
+      </div>
+      <div class="modal-opt">
+        <a class="btn btn-ghost" id="modalWriter" href="https://github.com/Wafelek3233/zen-os/releases/download/usb-writer-v1.0/ZenOS-USB-Writer.exe" target="_blank" rel="noopener">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="12" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/></svg>
+          Zen Writer for Windows
+        </a>
+        <p><b>Step 2 — Windows only.</b> One-click app that writes the ISO to a USB stick — no terminal,
+           no Python. Windows may show a SmartScreen warning: choose "More info" → "Run anyway" (the app
+           isn't code-signed yet, that's all).</p>
+      </div>
+    </div>
+    <details class="modal-os">
+      <summary>On Linux or macOS? No app needed — your system can write it<span class="pm">+</span></summary>
+      <div class="os-instr">
+        <p>There's no Zen Writer for Linux or macOS yet — and honestly, you won't miss it. Both systems
+           ship everything needed to write an ISO to a USB stick. The idea is the same everywhere: find
+           the device name of your stick, then copy the image straight onto it. Be careful with the
+           device name — writing to the wrong one erases that disk, so double-check before you press Enter.</p>
+
+        <span class="os-label">LINUX</span>
+        <p>Plug in your USB stick and list your drives. A 16 GB stick shows up as something like
+           <code>/dev/sdb</code> — its size is the easiest way to recognise it.</p>
+        <pre>lsblk</pre>
+        <p>Now write the image. <code>if=</code> is the ISO you downloaded, <code>of=</code> is your
+           stick. <code>status=progress</code> shows how far along it is, and <code>oflag=sync</code>
+           makes sure everything is flushed to the stick before the command finishes:</p>
+        <pre>sudo dd if=zen-os.iso of=/dev/sdb bs=4M status=progress oflag=sync</pre>
+        <p>Prefer a mouse? Right-click the ISO and open it with <b>GNOME Disks</b> → "Restore Disk
+           Image…", or use <b>balenaEtcher</b> — same result, no terminal at all.</p>
+
+        <span class="os-label">MACOS</span>
+        <p>Open Terminal and list your disks. Your stick is usually the last one, something like
+           <code>/dev/disk4</code>.</p>
+        <pre>diskutil list</pre>
+        <p>Unmount it (this isn't ejecting — the stick stays plugged in), then write the image. Note
+           <code>rdisk</code> instead of <code>disk</code>: that's the raw device, and it's several
+           times faster.</p>
+        <pre>diskutil unmountDisk /dev/disk4
+sudo dd if=zen-os.iso of=/dev/rdisk4 bs=4m</pre>
+        <p>macOS's dd shows no progress bar — it just works in silence for a few minutes. Press
+           <code>Ctrl+T</code> in the Terminal to print how far it's gotten. When it finishes, you're
+           ready to boot. <b>balenaEtcher</b> does the same job with a friendly window if you'd rather.</p>
+
+        <p>Either way: when the write finishes, safely eject the stick, plug it into the target PC and
+           boot from it. That's your Zen OS installer running.</p>
+      </div>
+    </details>
+  </div>
+</div>
+
 <script>
   /* ================================================================
      ZEN OS SITE CONFIG
@@ -315,7 +421,8 @@
     isoUrl: 'https://mega.nz/file/Cqp3SShA#DULPhdtGdgzKFy2kLMCToeB31864Thkb1s-OmOaeyiM',
     buttonLabel: 'Download ISO (Beta)',
     downloadMode: 'auto',   // 'auto' = live Tallywire count | 'manual' = fixed downloadCount
-    downloadCount: 0
+    downloadCount: 0,
+    writerUrl: 'https://github.com/Wafelek3233/zen-os/releases/download/usb-writer-v1.0/ZenOS-USB-Writer.exe'
   };
   var TALLYWIRE = 'https://tallywire.cronpulse.workers.dev';
   var TW_NS     = 'zen-os-v1';
@@ -323,9 +430,11 @@
 
   /* ---- ISO link + download counter (config-driven) ---- */
   (function(){
-    var el  = document.getElementById('dlCount');
-    var btn = document.getElementById('download');
-    var lbl = document.getElementById('dlLabel');
+    var el   = document.getElementById('dlCount');
+    var dl   = document.getElementById('modalDl');      // the real "download ISO" action (in the modal)
+    var hero = document.getElementById('download');     // hero button just opens the modal
+    var lbl  = document.getElementById('dlLabel');
+    var mlbl = document.getElementById('modalDlLabel');
 
     function animateTo(target, current){
       current = current || 0;
@@ -344,7 +453,7 @@
         .then(function(r){ return r.json(); })
         .then(function(d){ animateTo(d.value || 0, 0); })
         .catch(function(){ el.textContent = '—'; });
-      btn.addEventListener('click', function(){
+      dl.addEventListener('click', function(){
         fetch(TALLYWIRE + '/hit/' + TW_NS + '/' + TW_KEY + '?unique=1')
           .then(function(r){ return r.json(); })
           .then(function(d){ animateTo(d.value || 0, parseInt(el.textContent.replace(/[^0-9]/g,'')) || 0); pop(); })
@@ -353,12 +462,20 @@
     }
     function setupManual(n){
       animateTo(n, 0);                       // manual = admin owns the number
-      btn.addEventListener('click', pop);    // click animates but does not change it
+      dl.addEventListener('click', pop);     // click animates but does not change it
     }
 
     function boot(cfg){
-      if (cfg.isoUrl) btn.href = cfg.isoUrl;
-      if (cfg.buttonLabel && lbl) lbl.textContent = cfg.buttonLabel;
+      if (cfg.isoUrl){
+        dl.href = cfg.isoUrl;
+        if (hero) hero.href = cfg.isoUrl;    // plain-HTML fallback (no JS) still reaches the ISO
+      }
+      var writer = document.getElementById('modalWriter');
+      if (cfg.writerUrl && writer) writer.href = cfg.writerUrl;
+      if (cfg.buttonLabel){
+        if (lbl)  lbl.textContent  = cfg.buttonLabel;
+        if (mlbl) mlbl.textContent = cfg.buttonLabel;
+      }
       if (cfg.downloadMode === 'manual') setupManual(cfg.downloadCount || 0);
       else setupAuto();
     }
@@ -367,6 +484,37 @@
       .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(function(cfg){ boot(Object.assign({}, DEFAULTS, cfg)); })
       .catch(function(){ boot(DEFAULTS); });   // file:// or missing config -> fallbacks
+  })();
+
+  /* ---- Download modal: hero button opens the picker instead of jumping straight to MEGA ---- */
+  (function(){
+    var modal = document.getElementById('dlModal');
+    var hero  = document.getElementById('download');
+    var close = document.getElementById('dlModalClose');
+    var dlBtn = document.getElementById('modalDl');
+    if (!modal || !hero) return;
+
+    function open(){
+      modal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+      if (close) close.focus();
+    }
+    function shut(){
+      modal.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    hero.addEventListener('click', function(e){
+      if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;   // power users: straight to MEGA
+      e.preventDefault();
+      open();
+    });
+    if (close) close.addEventListener('click', shut);
+    modal.addEventListener('click', function(e){ if (e.target === modal) shut(); });
+    addEventListener('keydown', function(e){
+      if (e.key === 'Escape' && modal.classList.contains('show')) shut();
+    });
+    if (dlBtn) dlBtn.addEventListener('click', function(){ setTimeout(shut, 150); });
   })();
 
   /* ---- Motion: aurora parallax, cursor glow, magnetic buttons, card tilt, scroll reveal ---- */
