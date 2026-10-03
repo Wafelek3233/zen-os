@@ -127,6 +127,8 @@
   .modal-opt .btn{justify-content:center;padding:14px 20px}
   .modal-opt p{color:var(--muted);font-size:12.5px;line-height:1.6;font-weight:300}
   .modal-opt p b{color:#c6cdd9;font-weight:600}
+  .writer-btns{display:flex;flex-direction:column;gap:10px}
+  .writer-btns .btn{padding:12px 16px;justify-content:center;font-size:14px}
   .modal-os{border:1px solid rgba(255,255,255,.09);background:rgba(0,0,0,.35);border-radius:16px;
     overflow:hidden;transition:border-color .3s ease}
   .modal-os:hover{border-color:rgba(139,92,246,.3)}
@@ -260,7 +262,7 @@
          (banner, name, version), and a confirmed, non-destructive install plan.</p></div>
     <div class="card reveal"><h3><span class="ic">⤓</span>Made to be installed</h3>
       <p>A graphical installer with language selection, a 3-second-confirmation safety step for storage,
-         and Zen Writer for Windows so you can flash the ISO without touching a terminal.</p></div>
+         and Zen Writer for Windows, Linux and macOS so you can flash the ISO without touching a terminal.</p></div>
   </div>
 </div></section>
 
@@ -344,7 +346,7 @@
   Open source coming soon.
 </footer>
 
-<!-- Download modal: pick the ISO, grab Zen Writer for Windows, or read the Linux/macOS instructions -->
+<!-- Download modal: pick the ISO, grab Zen Writer for Windows/Linux/macOS, or read the manual instructions -->
 <div class="modal-backdrop" id="dlModal" role="dialog" aria-modal="true" aria-labelledby="dlModalTitle">
   <div class="modal-card">
     <button class="modal-close" id="dlModalClose" type="button" aria-label="Close">&times;</button>
@@ -361,22 +363,35 @@
            stick next, using Zen Writer or your system's own tools.</p>
       </div>
       <div class="modal-opt">
-        <a class="btn btn-ghost" id="modalWriter" href="https://github.com/Wafelek3233/zen-os/releases/download/usb-writer-v1.0/ZenOS-USB-Writer.exe" target="_blank" rel="noopener">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="12" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/></svg>
-          Zen Writer for Windows
-        </a>
-        <p><b>Step 2 — Windows only.</b> One-click app that writes the ISO to a USB stick — no terminal,
-           no Python. Windows may show a SmartScreen warning: choose "More info" → "Run anyway" (the app
-           isn't code-signed yet, that's all).</p>
+        <div class="writer-btns">
+          <a class="btn btn-ghost" id="modalWriterWin" href="https://github.com/Wafelek3233/zen-os/releases/download/writer-v1.1/ZenOS-Writer-Windows.exe" target="_blank" rel="noopener">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="12" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/></svg>
+            Zen Writer — Windows (.exe)
+          </a>
+          <a class="btn btn-ghost" id="modalWriterLinux" href="https://github.com/Wafelek3233/zen-os/releases/download/writer-v1.1/ZenOS-Writer-Linux.tar.gz" target="_blank" rel="noopener">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="12" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/></svg>
+            Zen Writer — Linux (.tar.gz)
+          </a>
+          <a class="btn btn-ghost" id="modalWriterMac" href="https://github.com/Wafelek3233/zen-os/releases/download/writer-v1.1/ZenOS-Writer-macOS.tar.gz" target="_blank" rel="noopener">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="12" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/></svg>
+            Zen Writer — macOS (.tar.gz)
+          </a>
+        </div>
+        <p><b>Step 2 — the USB writer.</b> One app, now for all three systems. <b>Windows:</b> just run the
+           .exe — Windows may show a SmartScreen warning, choose "More info" → "Run anyway" (it isn't
+           code-signed yet, that's all). <b>Linux:</b> extract, then run <code>bash ZenOS-Writer.sh</code>.
+           <b>macOS:</b> extract, then double-click <code>ZenOS-Writer.command</code>. It protects your
+           system disk automatically — no terminal skills needed.</p>
       </div>
     </div>
     <details class="modal-os">
-      <summary>On Linux or macOS? No app needed — your system can write it<span class="pm">+</span></summary>
+      <summary>Prefer your system's own tools? Manual instructions<span class="pm">+</span></summary>
       <div class="os-instr">
-        <p>There's no Zen Writer for Linux or macOS yet — and honestly, you won't miss it. Both systems
-           ship everything needed to write an ISO to a USB stick. The idea is the same everywhere: find
-           the device name of your stick, then copy the image straight onto it. Be careful with the
-           device name — writing to the wrong one erases that disk, so double-check before you press Enter.</p>
+        <p>Zen Writer is the easiest path on any system — but if you'd rather use the tools already on
+           your machine, both Linux and macOS can write the ISO themselves. The idea is the same
+           everywhere: find the device name of your stick, then copy the image straight onto it. Be
+           careful with the device name — writing to the wrong one erases that disk, so double-check
+           before you press Enter.</p>
 
         <span class="os-label">LINUX</span>
         <p>Plug in your USB stick and list your drives. A 16 GB stick shows up as something like
@@ -422,7 +437,9 @@ sudo dd if=zen-os.iso of=/dev/rdisk4 bs=4m</pre>
     buttonLabel: 'Download ISO (Beta)',
     downloadMode: 'auto',   // 'auto' = live Tallywire count | 'manual' = fixed downloadCount
     downloadCount: 0,
-    writerUrl: 'https://github.com/Wafelek3233/zen-os/releases/download/usb-writer-v1.0/ZenOS-USB-Writer.exe'
+    writerUrlWin:   'https://github.com/Wafelek3233/zen-os/releases/download/writer-v1.1/ZenOS-Writer-Windows.exe',
+    writerUrlLinux: 'https://github.com/Wafelek3233/zen-os/releases/download/writer-v1.1/ZenOS-Writer-Linux.tar.gz',
+    writerUrlMac:   'https://github.com/Wafelek3233/zen-os/releases/download/writer-v1.1/ZenOS-Writer-macOS.tar.gz'
   };
   var TALLYWIRE = 'https://tallywire.cronpulse.workers.dev';
   var TW_NS     = 'zen-os-v1';
@@ -470,8 +487,12 @@ sudo dd if=zen-os.iso of=/dev/rdisk4 bs=4m</pre>
         dl.href = cfg.isoUrl;
         if (hero) hero.href = cfg.isoUrl;    // plain-HTML fallback (no JS) still reaches the ISO
       }
-      var writer = document.getElementById('modalWriter');
-      if (cfg.writerUrl && writer) writer.href = cfg.writerUrl;
+      [['modalWriterWin','writerUrlWin'],
+       ['modalWriterLinux','writerUrlLinux'],
+       ['modalWriterMac','writerUrlMac']].forEach(function(pair){
+        var node = document.getElementById(pair[0]);
+        if (cfg[pair[1]] && node) node.href = cfg[pair[1]];
+      });
       if (cfg.buttonLabel){
         if (lbl)  lbl.textContent  = cfg.buttonLabel;
         if (mlbl) mlbl.textContent = cfg.buttonLabel;
