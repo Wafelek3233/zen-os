@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zen OS — a calm, complete Linux desktop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#040209;
+    --text:#e8ecf4;
+    --muted:#9aa4b6;
+    --ring:#ffd9a0;
+    --violet:139,92,246;
+    --blue:56,189,248;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+
+  /* ---------- ANIMATED AURORA BACKGROUND (black + drifting purple / blue) ---------- */
+  #aurora{position:fixed;inset:0;z-index:0;overflow:hidden;background:#040209;pointer-events:none}
+  #auroraInner{position:absolute;inset:-8%;will-change:transform}
+  .blob{position:absolute;border-radius:50%;filter:blur(90px);will-change:transform}
+  .b1{width:54vw;height:54vw;left:-14vw;top:-16vw;opacity:.62;
+    background:radial-gradient(circle at 35% 35%, rgba(124,58,237,.9), rgba(124,58,237,0) 65%);
+    animation:drift1 26s ease-in-out infinite alternate}
+  .b2{width:46vw;height:46vw;right:-12vw;top:6vh;opacity:.58;
+    background:radial-gradient(circle at 60% 40%, rgba(37,99,235,.85), rgba(37,99,235,0) 65%);
+    animation:drift2 32s ease-in-out infinite alternate}
+  .b3{width:62vw;height:62vw;left:16vw;bottom:-30vw;opacity:.48;
+    background:radial-gradient(circle at 50% 50%, rgba(147,51,234,.6), rgba(88,28,135,0) 65%);
+    animation:drift3 38s ease-in-out infinite alternate}
+  .b4{width:30vw;height:30vw;right:14vw;bottom:4vh;opacity:.46;
+    background:radial-gradient(circle at 50% 50%, rgba(56,189,248,.5), rgba(56,189,248,0) 65%);
+    animation:drift4 24s ease-in-out infinite alternate}
+  @keyframes drift1{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(14vw,10vh,0) scale(1.15)}}
+  @keyframes drift2{from{transform:translate3d(0,0,0) scale(1.05)}to{transform:translate3d(-12vw,16vh,0) scale(.9)}}
+  @keyframes drift3{from{transform:translate3d(0,0,0) scale(.95)}to{transform:translate3d(10vw,-12vh,0) scale(1.2)}}
+  @keyframes drift4{from{transform:translate3d(0,0,0)}to{transform:translate3d(-16vw,-10vh,0) scale(1.25)}}
+  #cursorGlow{position:fixed;left:0;top:0;width:420px;height:420px;z-index:1;pointer-events:none;
+    background:radial-gradient(circle, rgba(139,92,246,.16), rgba(56,189,248,.07) 45%, transparent 70%);
+    mix-blend-mode:screen;will-change:transform}
+  @media(hover:none){#cursorGlow{display:none}}
+
+  /* ---------- MOTION: scroll reveal ---------- */
+  .reveal{opacity:0;translate:0 26px;transition:opacity .7s ease, translate .7s cubic-bezier(.2,.8,.2,1)}
+  .reveal.in{opacity:1;translate:0 0}
+
+  @media(prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+    .reveal{opacity:1;translate:0 0}
+  }
+
+  /* ---------- LAYOUT ---------- */
+  .wrap{position:relative;z-index:2;max-width:1060px;margin:0 auto;padding:0 24px}
+  header{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;
+    max-width:1060px;margin:0 auto;padding:26px 24px}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.14em;font-size:15px}
+  .logo .dot{width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:0 0 14px rgba(255,255,255,.8)}
+  nav{display:flex;gap:26px}
+  nav a{color:var(--muted);text-decoration:none;font-size:13.5px;font-weight:500;transition:color .25s ease}
+  nav a:hover{color:#fff}
+
+  .hero{position:relative;z-index:2;text-align:center;padding:96px 24px 70px}
+  .badge{display:inline-block;font-size:11.5px;font-weight:600;letter-spacing:.14em;color:var(--ring);
+    border:1px solid rgba(255,217,160,.35);background:rgba(255,217,160,.06);padding:6px 14px;border-radius:999px;margin-bottom:26px;
+    animation:pulse 3.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,217,160,.18)}50%{box-shadow:0 0 26px 2px rgba(255,217,160,.22)}}
+  .hero h1{font-size:clamp(44px,8vw,92px);font-weight:800;letter-spacing:.06em;line-height:1.02;
+    background:linear-gradient(100deg,#ffffff 10%,#c4b5fd 35%,#93c5fd 55%,#ffffff 85%);
+    background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+    animation:shine 9s linear infinite;filter:drop-shadow(0 0 34px rgba(139,92,246,.35))}
+  @keyframes shine{to{background-position:220% 0}}
+  .hero p{max-width:620px;margin:22px auto 0;color:var(--muted);font-size:17px;line-height:1.65;font-weight:300;
+    text-shadow:0 1px 14px rgba(0,0,0,.85)}
+  .cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:38px}
+  .btn{display:inline-flex;align-items:center;gap:10px;padding:15px 30px;border-radius:14px;
+    font:600 15px 'Inter',sans-serif;text-decoration:none;position:relative;overflow:hidden;
+    transition:transform .18s ease, box-shadow .18s ease, border-color .3s ease}
+  .btn::after{content:'';position:absolute;top:0;left:-70%;width:45%;height:100%;transform:skewX(-18deg);
+    background:linear-gradient(100deg,transparent,var(--shine,rgba(255,255,255,.45)),transparent);
+    transition:left .55s ease;pointer-events:none}
+  .btn:hover::after{left:130%}
+  .btn-white{background:#fff;color:#0a0a0a;box-shadow:0 10px 40px rgba(255,255,255,.22)}
+  .btn-white:hover{box-shadow:0 16px 50px rgba(255,255,255,.3)}
+  .btn-ghost{background:rgba(255,255,255,.05);color:var(--text);border:1px solid rgba(255,255,255,.16);
+    --shine:rgba(255,255,255,.14)}
+  .btn-ghost:hover{border-color:rgba(var(--violet),.5)}
+  .dl-count{display:inline-flex;align-items:center;gap:9px;margin-top:28px;
+    color:var(--muted);font-size:13px;font-weight:500;letter-spacing:.04em}
+  .dl-count b{display:inline-block;color:#fff;font-size:17px;font-weight:800;letter-spacing:.02em}
+  .dl-count b.pop{animation:pop .45s cubic-bezier(.2,.8,.2,1)}
+  @keyframes pop{30%{transform:scale(1.4);color:#c4b5fd}}
+  .dl-count .pulse-dot{width:7px;height:7px;border-radius:50%;background:#8b5cf6;
+    box-shadow:0 0 10px rgba(139,92,246,.9);animation:pulse 2.6s ease-in-out infinite}
+  .hero .beta-note{max-width:560px;margin:20px auto 0;color:var(--muted);font-size:13.5px;line-height:1.65;
+    font-weight:300;text-shadow:0 1px 14px rgba(0,0,0,.85)}
+  .hero .beta-note b{color:var(--ring);font-weight:600}
+
+  /* ---------- DOWNLOAD MODAL (ISO + Zen Writer + instructions) ---------- */
+  .modal-backdrop{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;
+    padding:24px;background:rgba(2,1,6,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  .modal-backdrop.show{display:flex}
+  .modal-card{position:relative;width:100%;max-width:640px;max-height:88vh;overflow:auto;text-align:left;
+    border:1px solid rgba(255,255,255,.12);background:rgba(8,5,18,.94);border-radius:24px;
+    padding:34px 30px 28px;box-shadow:0 30px 90px rgba(88,28,135,.45);
+    animation:modalIn .35s cubic-bezier(.2,.8,.2,1)}
+  @keyframes modalIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+  .modal-close{position:absolute;top:16px;right:16px;width:34px;height:34px;border-radius:50%;
+    border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:var(--muted);
+    font-size:17px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    transition:border-color .25s ease,color .25s ease,background .25s ease}
+  .modal-close:hover{border-color:rgba(var(--violet),.6);color:#fff;background:rgba(var(--violet),.15)}
+  .modal-card h3{font-size:22px;font-weight:800;letter-spacing:.02em;margin-bottom:6px}
+  .modal-sub{color:var(--muted);font-size:13.5px;line-height:1.6;font-weight:300;margin-bottom:24px;padding-right:26px}
+  .modal-opts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+  .modal-opt{display:flex;flex-direction:column;gap:10px}
+  .modal-opt .btn{justify-content:center;padding:14px 20px}
+  .modal-opt p{color:var(--muted);font-size:12.5px;line-height:1.6;font-weight:300}
+  .modal-opt p b{color:#c6cdd9;font-weight:600}
+  .writer-btns{display:flex;flex-direction:column;gap:10px}
+  .writer-btns .btn{padding:12px 16px;justify-content:center;font-size:14px}
+  .modal-os{border:1px solid rgba(255,255,255,.09);background:rgba(0,0,0,.35);border-radius:16px;
+    overflow:hidden;transition:border-color .3s ease}
+  .modal-os:hover{border-color:rgba(139,92,246,.3)}
+  .modal-os summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:14px;
+    padding:16px 20px;font:600 14px 'Inter',sans-serif;color:var(--text);cursor:pointer}
+  .modal-os summary::-webkit-details-marker{display:none}
+  .modal-os summary .pm{flex:none;width:22px;height:22px;border-radius:50%;border:1px solid rgba(255,255,255,.25);
+    display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1;color:var(--muted);
+    transition:transform .35s ease,border-color .3s ease,color .3s ease}
+  .modal-os[open] summary .pm{transform:rotate(45deg);border-color:rgba(139,92,246,.6);color:#c4b5fd}
+  .os-instr{padding:2px 20px 18px}
+  .os-instr p{color:var(--muted);font-size:13px;line-height:1.7;font-weight:300;margin-top:8px}
+  .os-instr .os-label{display:block;color:var(--ring);font-size:11px;font-weight:700;letter-spacing:.16em;margin:18px 0 2px}
+  .os-instr pre{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;
+    padding:12px 14px;margin-top:8px;overflow-x:auto;font:12.5px/1.65 ui-monospace,Consolas,"Courier New",monospace;color:#c9d4e6}
+  .os-instr code{font-family:ui-monospace,Consolas,"Courier New",monospace;font-size:12px;
+    background:rgba(255,255,255,.08);padding:1.5px 6px;border-radius:6px;color:#dcd6ff;white-space:nowrap}
+
+  section{position:relative;z-index:2;padding:70px 0}
+  h2{font-size:clamp(26px,4vw,38px);font-weight:800;letter-spacing:.02em;margin-bottom:12px}
+  .sub{color:var(--muted);font-size:15.5px;line-height:1.6;max-width:640px;margin-bottom:36px;font-weight:300}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+  .card{border:1px solid rgba(255,255,255,.09);background:rgba(0,0,0,.45);border-radius:20px;padding:26px;
+    backdrop-filter:blur(6px);position:relative;overflow:hidden;
+    transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
+    transition:transform .18s ease, border-color .3s ease, box-shadow .3s ease,
+               opacity .7s ease, translate .7s cubic-bezier(.2,.8,.2,1)}
+  .card::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .3s ease;
+    background:radial-gradient(340px circle at var(--gx,50%) var(--gy,50%), rgba(var(--violet),.16), transparent 65%)}
+  .card:hover::before{opacity:1}
+  .card:hover{border-color:rgba(var(--violet),.35);box-shadow:0 18px 50px rgba(88,28,135,.28)}
+  .card h3{font-size:17px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+  .card h3 .ic{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.08);
+    display:flex;align-items:center;justify-content:center;font-size:16px;flex:none;
+    transition:background .3s ease, transform .3s ease}
+  .card:hover h3 .ic{background:rgba(var(--violet),.22);transform:scale(1.08) rotate(-4deg)}
+  .card p{color:var(--muted);font-size:14px;line-height:1.65;font-weight:300}
+
+  .faq{max-width:760px}
+  .faq-item{border:1px solid rgba(255,255,255,.09);background:rgba(0,0,0,.45);border-radius:16px;
+    margin-bottom:12px;overflow:hidden;backdrop-filter:blur(6px);transition:border-color .3s ease}
+  .faq-item:hover{border-color:rgba(139,92,246,.3)}
+  .faq-q{width:100%;display:flex;justify-content:space-between;align-items:center;gap:14px;
+    background:transparent;border:0;color:var(--text);font:600 15px 'Inter',sans-serif;
+    padding:18px 22px;cursor:pointer;text-align:left}
+  .faq-q .pm{flex:none;width:22px;height:22px;border-radius:50%;border:1px solid rgba(255,255,255,.25);
+    display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1;color:var(--muted);
+    transition:transform .35s ease, border-color .3s ease, color .3s ease}
+  .faq-item.open .pm{transform:rotate(45deg);border-color:rgba(139,92,246,.6);color:#c4b5fd}
+  .faq-a{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s cubic-bezier(.2,.8,.2,1)}
+  .faq-item.open .faq-a{grid-template-rows:1fr}
+  .faq-a > div{overflow:hidden}
+  .faq-a p{padding:0 22px 18px;color:var(--muted);font-size:14px;line-height:1.65;font-weight:300}
+
+  .contact-card{max-width:760px;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.48);
+    border-radius:20px;padding:28px;backdrop-filter:blur(6px)}
+  .contact-form{display:grid;gap:16px}
+  .contact-field{display:grid;gap:8px}
+  .contact-form label{color:var(--text);font-size:13px;font-weight:600}
+  .contact-form input,.contact-form textarea{width:100%;border:1px solid rgba(255,255,255,.16);
+    border-radius:12px;background:rgba(255,255,255,.05);color:var(--text);
+    font:400 14px 'Inter',sans-serif;padding:13px 15px;outline:none;
+    transition:border-color .2s ease,box-shadow .2s ease}
+  .contact-form input:focus,.contact-form textarea:focus{border-color:rgba(var(--violet),.75);
+    box-shadow:0 0 0 3px rgba(var(--violet),.18)}
+  .contact-form textarea{min-height:160px;resize:vertical;line-height:1.6}
+  .contact-form input::placeholder,.contact-form textarea::placeholder{color:#7d8799}
+  .contact-form .btn{justify-self:start;cursor:pointer;border:0}
+  .contact-note{margin-top:16px;color:var(--muted);font-size:12px;line-height:1.6}
+
+  .about{border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.5);border-radius:24px;padding:38px;backdrop-filter:blur(8px);
+    transition:border-color .3s ease, box-shadow .3s ease, opacity .7s ease, translate .7s cubic-bezier(.2,.8,.2,1)}
+  .about:hover{border-color:rgba(var(--blue),.35);box-shadow:0 18px 60px rgba(37,99,235,.22)}
+  .about .sig{margin-top:20px;color:var(--ring);font-weight:600;font-size:14px}
+  .about p{color:#c6cdd9;font-size:15.5px;line-height:1.75;font-weight:300}
+  .about p + p{margin-top:14px}
+  .about a{color:#93c5fd;text-decoration:none;font-weight:500;border-bottom:1px solid rgba(147,197,253,.4);transition:color .25s ease,border-color .25s ease}
+  .about a:hover{color:#fff;border-color:#fff}
+
+  footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.5);
+    padding:34px 24px;text-align:center;color:#6b7484;font-size:12.5px}
+
+  @media(max-width:760px){
+    .grid{grid-template-columns:1fr}
+    .modal-opts{grid-template-columns:1fr}
+    .modal-card{padding:30px 20px 22px}
+    nav{display:none}
+  }
+</style>
+</head>
+<body>
+
+<noscript><style>.reveal{opacity:1;translate:0 0}</style></noscript>
+
+<!-- Animated aurora background: black base with drifting purple / blue glows -->
+<div id="aurora"><div id="auroraInner">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+  <div class="blob b4"></div>
+</div></div>
+<div id="cursorGlow"></div>
+
+<header>
+  <div class="logo"><span class="dot"></span>ZEN OS</div>
+  <nav>
+    <a href="#features">Features</a>
+    <a href="#learn">Learn</a>
+    <a href="#faq">FAQ</a>
+    <a href="#report">Report a problem</a>
+    <a href="#about">About</a>
+    <a href="https://github.com/Wafelek3233/zen-os" target="_blank" rel="noopener">GitHub</a>
+    <a href="#download">Download</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div class="badge">BETA</div>
+  <h1>ZEN OS</h1>
+  <p>A calm, complete Linux desktop. One installer, six desktop environments, and an updater
+     that handles both everyday packages and full system releases — delivered straight from us to you.</p>
+  <div class="dl-count"><span class="pulse-dot"></span><b id="dlCount">…</b>&nbsp;downloads so far</div>
+  <div class="cta">
+    <a class="btn btn-white" id="download" href="https://mega.nz/file/Cqp3SShA#DULPhdtGdgzKFy2kLMCToeB31864Thkb1s-OmOaeyiM" target="_blank" rel="noopener">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 20h16"/></svg>
+      <span id="dlLabel">Download ISO (Beta)</span>
+    </a>
+    <a class="btn btn-ghost" href="#learn">Learn more</a>
+    <a class="btn btn-ghost" href="https://github.com/Wafelek3233/zen-os" target="_blank" rel="noopener">Open source — coming soon</a>
+  </div>
+  <p class="beta-note reveal">Zen OS is currently in <b>beta</b> — you may hit bugs, virtual machines
+     especially. Even so, we'd love you to test it: on your own PC or in a VM, and tell us what you find.</p>
+</div>
+
+<section id="features"><div class="wrap">
+  <h2 class="reveal">What is Zen OS?</h2>
+  <div class="sub reveal">A desktop operating system built on Debian 13 "Trixie". We keep Debian's rock-solid
+    base and add our own installer, theme and updater on top — so it feels like one finished product.</div>
+  <div class="grid">
+    <div class="card reveal"><h3><span class="ic">⇄</span>Two update channels</h3>
+      <p><b>Feature Updates</b> refresh everyday packages through apt. <b>System Updates</b> deliver a whole
+         new system image over the air (OTA), verified by checksum before anything touches your disk.</p></div>
+    <div class="card reveal"><h3><span class="ic">◫</span>Your desktop, your choice</h3>
+      <p>Pick KDE Plasma, GNOME, XFCE, Cinnamon, MATE or LXQt during install. Zen OS adapts — the updater
+         and installer work the same on all of them.</p></div>
+    <div class="card reveal"><h3><span class="ic">◍</span>Zen Update</h3>
+      <p>One window for everything: package upgrades, full system releases with a release card
+         (banner, name, version), and a confirmed, non-destructive install plan.</p></div>
+    <div class="card reveal"><h3><span class="ic">⤓</span>Made to be installed</h3>
+      <p>A graphical installer with language selection, a 3-second-confirmation safety step for storage,
+         and Zen Writer for Windows, Linux and macOS so you can flash the ISO without touching a terminal.</p></div>
+  </div>
+</div></section>
+
+<section id="learn"><div class="wrap">
+  <h2 class="reveal">Learn</h2>
+  <div class="sub reveal">New to Linux? These are the three ideas behind everything Zen OS does.</div>
+  <div class="grid">
+    <div class="card reveal"><h3><span class="ic">▤</span>What is a distro?</h3>
+      <p>A "distribution" is Linux plus everything around it: packages, installer, desktop. Zen OS is a
+         distro built on Debian — like a finished house built on a very solid foundation.</p></div>
+    <div class="card reveal"><h3><span class="ic">⇪</span>What is OTA?</h3>
+      <p>"Over-the-air" means the whole system image travels from our server to your machine, like a phone
+         update. We sign and checksum it, so what you install is exactly what we published.</p></div>
+    <div class="card reveal"><h3><span class="ic">⌸</span>What is apt?</h3>
+      <p>Debian's package manager. It installs and upgrades individual programs. Zen Update wraps it in a
+         friendly window so you never have to memorise commands.</p></div>
+  </div>
+</div></section>
+
+<section id="faq"><div class="wrap">
+  <h2 class="reveal">FAQ</h2>
+  <div class="sub reveal">Short answers to the questions we get the most.</div>
+  <div class="faq">
+    <div class="faq-item reveal">
+      <button class="faq-q" type="button">Is Zen OS free?<span class="pm">+</span></button>
+      <div class="faq-a"><div><p>Yes. The beta ISO costs nothing to download and use, and the whole project
+        goes open-source soon — then you'll be able to read, build and shape every line of it.</p></div></div>
+    </div>
+    <div class="faq-item reveal">
+      <button class="faq-q" type="button">Will it delete my files or my Windows?<span class="pm">+</span></button>
+      <div class="faq-a"><div><p>Never without asking. The installer shows you the storage plan and makes you
+        hold a 3-second confirmation before anything is written. You can also try Zen OS in a virtual machine
+        or install it alongside your current system.</p></div></div>
+    </div>
+    <div class="faq-item reveal">
+      <button class="faq-q" type="button">What computer do I need?<span class="pm">+</span></button>
+      <div class="faq-a"><div><p>Any 64-bit (amd64) machine that can run Debian 13. The image ships non-free
+        firmware, so most Wi-Fi cards and graphics chips work out of the box. 4 GB of RAM and 20 GB of disk
+        is a comfortable start.</p></div></div>
+    </div>
+    <div class="faq-item reveal">
+      <button class="faq-q" type="button">Do I need to know Linux commands?<span class="pm">+</span></button>
+      <div class="faq-a"><div><p>No. The installer is graphical, the desktop is a normal desktop (you pick one
+        of six), and Zen Update puts every update behind one friendly window. The terminal stays optional.</p></div></div>
+    </div>
+    <div class="faq-item reveal">
+      <button class="faq-q" type="button">How do updates arrive?<span class="pm">+</span></button>
+      <div class="faq-a"><div><p>Two channels. Feature Updates refresh everyday packages through apt.
+        System Updates deliver a whole new system image over the air — checksummed and confirmed before
+        anything touches your disk.</p></div></div>
+    </div>
+    <div class="faq-item reveal">
+      <button class="faq-q" type="button">Who is behind Zen OS?<span class="pm">+</span></button>
+      <div class="faq-a"><div><p>A 14-year-old founder called Zen, with AI helping along the way — and soon a
+        whole open-source community. The full story is in the About section below.</p></div></div>
+    </div>
+    <div class="faq-item reveal">
+      <button class="faq-q" type="button">Is the beta stable? What about virtual machines?<span class="pm">+</span></button>
+      <div class="faq-a"><div><p>Not fully stable yet — that's what beta means. Bugs can show up anywhere, and
+        virtual machines are the most likely to trip it up (graphics, drivers and networking are the usual
+        suspects). That's exactly why we encourage testing: install it on your own PC or spin it up in a VM,
+        and tell us what goes wrong. Every report makes the next build better.</p></div></div>
+    </div>
+  </div>
+</div></section>
+
+<section id="report"><div class="wrap">
+  <h2 class="reveal">Report a problem</h2>
+  <div class="sub reveal">Found a bug or something not working? Send a report to the Zen OS maintainer.</div>
+  <div class="contact-card reveal">
+    <form class="contact-form" action="https://api.web3forms.com/submit" method="POST">
+      <input type="hidden" name="access_key" value="08e86a7d-177b-4872-a9d2-19551492b4ca">
+      <input type="hidden" name="subject" value="Zen OS website problem report">
+      <input type="hidden" name="redirect" value="https://wafelek3233.github.io/zen-os/#report">
+      <input type="checkbox" name="botcheck" class="hidden" style="display:none">
+      <div class="contact-field">
+        <label for="report-email">Your email address</label>
+        <input id="report-email" type="email" name="email" autocomplete="email" maxlength="254"
+          placeholder="you@example.com" required>
+      </div>
+      <div class="contact-field">
+        <label for="report-message">What went wrong?</label>
+        <textarea id="report-message" name="message" maxlength="10000"
+          placeholder="Describe what happened and what you expected..." required></textarea>
+      </div>
+      <button class="btn btn-white" type="submit">Send report</button>
+    </form>
+    <p class="contact-note">Your email address and report are sent to franekimko123@gmail.com via Web3Forms. Please do not include passwords or other sensitive information.</p>
+  </div>
+</div></section>
+
+<section id="about"><div class="wrap">
+  <div class="about reveal">
+    <h2>About the founder</h2>
+    <p>Hi — I'm Zen (not my real name). I'm 14 years old and the founder of Zen OS. I'm not some advanced
+       programmer, and I can honestly admit that AI helped me build this. If that bothers you, I understand.</p>
+    <p>But the project will be open-source soon — the full source code will appear on our
+       <a href="https://github.com/Wafelek3233/zen-os" target="_blank" rel="noopener">GitHub</a>.
+       So maybe I started it — but <b>we</b> will finish it together.</p>
+    <div class="sig">— Zen, founder of Zen OS</div>
+  </div>
+</div></section>
+
+<footer>
+  Zen OS &middot; beta &middot; built on Debian 13 Trixie &middot; © 2026 Zen OS Project<br>
+  Open source coming soon.
+</footer>
+
+<!-- Download modal: pick the ISO, grab Zen Writer for Windows/Linux/macOS, or read the manual instructions -->
+<div class="modal-backdrop" id="dlModal" role="dialog" aria-modal="true" aria-labelledby="dlModalTitle">
+  <div class="modal-card">
+    <button class="modal-close" id="dlModalClose" type="button" aria-label="Close">&times;</button>
+    <h3 id="dlModalTitle">Download Zen OS</h3>
+    <p class="modal-sub">Beta software — expect a few rough edges, virtual machines especially.
+       Two steps: get the system image, then put it on a USB stick.</p>
+    <div class="modal-opts">
+      <div class="modal-opt">
+        <a class="btn btn-white" id="modalDl" href="https://mega.nz/file/Cqp3SShA#DULPhdtGdgzKFy2kLMCToeB31864Thkb1s-OmOaeyiM" target="_blank" rel="noopener">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 20h16"/></svg>
+          <span id="modalDlLabel">Download ISO (Beta)</span>
+        </a>
+        <p><b>Step 1 — the system image.</b> Hosted on MEGA. Download it first; you'll write it to a USB
+           stick next, using Zen Writer or your system's own tools.</p>
+      </div>
+      <div class="modal-opt">
+        <div class="writer-btns">
+          <a class="btn btn-ghost" id="modalWriterWin" href="https://github.com/Wafelek3233/zen-os/releases/download/writer-v1.1/ZenOS-Writer-Windows.exe" target="_blank" rel="noopener">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="12" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/></svg>
+            Zen Writer — Windows (.exe)
+          </a>
+          <a class="btn btn-ghost" id="modalWriterLinux" href="https://github.com/Wafelek3233/zen-os/releases/download/writer-v1.1/ZenOS-Writer-Linux.tar.gz" target="_blank" rel="noopener">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="12" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/></svg>
+            Zen Writer — Linux (.tar.gz)
+          </a>
+          <a class="btn btn-ghost" id="modalWriterMac" href="https://github.com/Wafelek3233/zen-os/releases/download/writer-v1.1/ZenOS-Writer-macOS.tar.gz" target="_blank" rel="noopener">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="12" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/></svg>
+            Zen Writer — macOS (.tar.gz)
+          </a>
+        </div>
+        <p><b>Step 2 — the USB writer.</b> One app, now for all three systems. <b>Windows:</b> just run the
+           .exe — Windows may show a SmartScreen warning, choose "More info" → "Run anyway" (it isn't
+           code-signed yet, that's all). <b>Linux:</b> extract, then run <code>bash ZenOS-Writer.sh</code>.
+           <b>macOS:</b> extract, then double-click <code>ZenOS-Writer.command</code>. It protects your
+           system disk automatically — no terminal skills needed.</p>
+      </div>
+    </div>
+    <details class="modal-os">
+      <summary>Prefer your system's own tools? Manual instructions<span class="pm">+</span></summary>
+      <div class="os-instr">
+        <p>Zen Writer is the easiest path on any system — but if you'd rather use the tools already on
+           your machine, both Linux and macOS can write the ISO themselves. The idea is the same
+           everywhere: find the device name of your stick, then copy the image straight onto it. Be
+           careful with the device name — writing to the wrong one erases that disk, so double-check
+           before you press Enter.</p>
+
+        <span class="os-label">LINUX</span>
+        <p>Plug in your USB stick and list your drives. A 16 GB stick shows up as something like
+           <code>/dev/sdb</code> — its size is the easiest way to recognise it.</p>
+        <pre>lsblk</pre>
+        <p>Now write the image. <code>if=</code> is the ISO you downloaded, <code>of=</code> is your
+           stick. <code>status=progress</code> shows how far along it is, and <code>oflag=sync</code>
+           makes sure everything is flushed to the stick before the command finishes:</p>
+        <pre>sudo dd if=zen-os.iso of=/dev/sdb bs=4M status=progress oflag=sync</pre>
+        <p>Prefer a mouse? Right-click the ISO and open it with <b>GNOME Disks</b> → "Restore Disk
+           Image…", or use <b>balenaEtcher</b> — same result, no terminal at all.</p>
+
+        <span class="os-label">MACOS</span>
+        <p>Open Terminal and list your disks. Your stick is usually the last one, something like
+           <code>/dev/disk4</code>.</p>
+        <pre>diskutil list</pre>
+        <p>Unmount it (this isn't ejecting — the stick stays plugged in), then write the image. Note
+           <code>rdisk</code> instead of <code>disk</code>: that's the raw device, and it's several
+           times faster.</p>
+        <pre>diskutil unmountDisk /dev/disk4
+sudo dd if=zen-os.iso of=/dev/rdisk4 bs=4m</pre>
+        <p>macOS's dd shows no progress bar — it just works in silence for a few minutes. Press
+           <code>Ctrl+T</code> in the Terminal to print how far it's gotten. When it finishes, you're
+           ready to boot. <b>balenaEtcher</b> does the same job with a friendly window if you'd rather.</p>
+
+        <p>Either way: when the write finishes, safely eject the stick, plug it into the target PC and
+           boot from it. That's your Zen OS installer running.</p>
+      </div>
+    </details>
+  </div>
+</div>
+
+<script>
+  /* ================================================================
+     ZEN OS SITE CONFIG
+     The site reads website/site-config.json at load. Zen Tool (the admin
+     app) rewrites that file and pushes it, so the ISO link + download
+     numbers change WITHOUT editing this HTML. The values below are only
+     fallbacks, used when the JSON is missing (e.g. opened straight from disk).
+  ================================================================ */
+  var DEFAULTS = {
+    isoUrl: 'https://mega.nz/file/Cqp3SShA#DULPhdtGdgzKFy2kLMCToeB31864Thkb1s-OmOaeyiM',
+    buttonLabel: 'Download ISO (Beta)',
+    downloadMode: 'auto',   // 'auto' = live Tallywire count | 'manual' = fixed downloadCount
+    downloadCount: 0,
+    writerUrlWin:   'https://github.com/Wafelek3233/zen-os/releases/download/writer-v1.1/ZenOS-Writer-Windows.exe',
+    writerUrlLinux: 'https://github.com/Wafelek3233/zen-os/releases/download/writer-v1.1/ZenOS-Writer-Linux.tar.gz',
+    writerUrlMac:   'https://github.com/Wafelek3233/zen-os/releases/download/writer-v1.1/ZenOS-Writer-macOS.tar.gz'
+  };
+  var TALLYWIRE = 'https://tallywire.cronpulse.workers.dev';
+  var TW_NS     = 'zen-os-v2';
+  var TW_KEY    = 'iso-downloads';
+
+  /* ---- ISO link + download counter (config-driven) ---- */
+  (function(){
+    var el   = document.getElementById('dlCount');
+    var dl   = document.getElementById('modalDl');      // the real "download ISO" action (in the modal)
+    var hero = document.getElementById('download');     // hero button just opens the modal
+    var lbl  = document.getElementById('dlLabel');
+    var mlbl = document.getElementById('modalDlLabel');
+
+    function animateTo(target, current){
+      current = current || 0;
+      var t0 = null;
+      (function up(ts){
+        if (t0 === null) t0 = ts;
+        var k = Math.min(1, (ts - t0) / 900);
+        el.textContent = Math.round(current + (target - current) * (1 - Math.pow(1 - k, 3))).toLocaleString('en-US');
+        if (k < 1) requestAnimationFrame(up);
+      })(performance.now());
+    }
+    function pop(){ el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+
+    function setupAuto(){
+      fetch(TALLYWIRE + '/get/' + TW_NS + '/' + TW_KEY)
+        .then(function(r){ return r.json(); })
+        .then(function(d){ animateTo(d.value || 0, 0); })
+        .catch(function(){ el.textContent = '—'; });
+      dl.addEventListener('click', function(){
+        fetch(TALLYWIRE + '/hit/' + TW_NS + '/' + TW_KEY + '?unique=1')
+          .then(function(r){ return r.json(); })
+          .then(function(d){ animateTo(d.value || 0, parseInt(el.textContent.replace(/[^0-9]/g,'')) || 0); pop(); })
+          .catch(function(){ pop(); });
+      });
+    }
+    function setupManual(n){
+      animateTo(n, 0);                       // manual = admin owns the number
+      dl.addEventListener('click', pop);     // click animates but does not change it
+    }
+
+    function boot(cfg){
+      if (cfg.isoUrl){
+        dl.href = cfg.isoUrl;
+        if (hero) hero.href = cfg.isoUrl;    // plain-HTML fallback (no JS) still reaches the ISO
+      }
+      [['modalWriterWin','writerUrlWin'],
+       ['modalWriterLinux','writerUrlLinux'],
+       ['modalWriterMac','writerUrlMac']].forEach(function(pair){
+        var node = document.getElementById(pair[0]);
+        if (cfg[pair[1]] && node) node.href = cfg[pair[1]];
+      });
+      if (cfg.buttonLabel){
+        if (lbl)  lbl.textContent  = cfg.buttonLabel;
+        if (mlbl) mlbl.textContent = cfg.buttonLabel;
+      }
+      if (cfg.downloadMode === 'manual') setupManual(cfg.downloadCount || 0);
+      else setupAuto();
+    }
+
+    fetch('site-config.json?t=' + Date.now(), { cache: 'no-store' })
+      .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(cfg){ boot(Object.assign({}, DEFAULTS, cfg)); })
+      .catch(function(){ boot(DEFAULTS); });   // file:// or missing config -> fallbacks
+  })();
+
+  /* ---- Download modal: hero button opens the picker instead of jumping straight to MEGA ---- */
+  (function(){
+    var modal = document.getElementById('dlModal');
+    var hero  = document.getElementById('download');
+    var close = document.getElementById('dlModalClose');
+    var dlBtn = document.getElementById('modalDl');
+    if (!modal || !hero) return;
+
+    function open(){
+      modal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+      if (close) close.focus();
+    }
+    function shut(){
+      modal.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    hero.addEventListener('click', function(e){
+      if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;   // power users: straight to MEGA
+      e.preventDefault();
+      open();
+    });
+    if (close) close.addEventListener('click', shut);
+    modal.addEventListener('click', function(e){ if (e.target === modal) shut(); });
+    addEventListener('keydown', function(e){
+      if (e.key === 'Escape' && modal.classList.contains('show')) shut();
+    });
+    if (dlBtn) dlBtn.addEventListener('click', function(){ setTimeout(shut, 150); });
+  })();
+
+  /* ---- Motion: aurora parallax, cursor glow, magnetic buttons, card tilt, scroll reveal ---- */
+  (function(){
+    var inner = document.getElementById('auroraInner');
+    var glow  = document.getElementById('cursorGlow');
+    var tx = innerWidth / 2, ty = innerHeight / 2, gx = tx, gy = ty;
+    addEventListener('mousemove', function(e){
+      tx = e.clientX; ty = e.clientY;
+      var mx = (e.clientX / innerWidth - 0.5) * 2;
+      var my = (e.clientY / innerHeight - 0.5) * 2;
+      inner.style.transform = 'translate3d(' + (mx * -18).toFixed(1) + 'px,' + (my * -14).toFixed(1) + 'px,0)';
+    });
+    (function loop(){
+      gx += (tx - gx) * 0.12;
+      gy += (ty - gy) * 0.12;
+      glow.style.transform = 'translate3d(' + (gx - 210).toFixed(1) + 'px,' + (gy - 210).toFixed(1) + 'px,0)';
+      requestAnimationFrame(loop);
+    })();
+
+    document.querySelectorAll('.btn').forEach(function(b){
+      b.addEventListener('mousemove', function(e){
+        var r = b.getBoundingClientRect();
+        var dx = e.clientX - (r.left + r.width / 2);
+        var dy = e.clientY - (r.top + r.height / 2);
+        b.style.transform = 'translate(' + (dx * 0.16).toFixed(1) + 'px,' + (dy * 0.22).toFixed(1) + 'px)';
+      });
+      b.addEventListener('mouseleave', function(){ b.style.transform = ''; });
+    });
+
+    document.querySelectorAll('.card').forEach(function(card){
+      card.addEventListener('mousemove', function(e){
+        var r = card.getBoundingClientRect();
+        var px = (e.clientX - r.left) / r.width;
+        var py = (e.clientY - r.top) / r.height;
+        card.style.setProperty('--rx', ((0.5 - py) * 6).toFixed(2) + 'deg');
+        card.style.setProperty('--ry', ((px - 0.5) * 8).toFixed(2) + 'deg');
+        card.style.setProperty('--gx', (px * 100).toFixed(1) + '%');
+        card.style.setProperty('--gy', (py * 100).toFixed(1) + '%');
+      });
+      card.addEventListener('mouseleave', function(){
+        card.style.setProperty('--rx', '0deg');
+        card.style.setProperty('--ry', '0deg');
+      });
+    });
+
+    var revealsStarted = false;
+    function startReveals(){
+      if (revealsStarted) return;
+      revealsStarted = true;
+      var io = new IntersectionObserver(function(entries){
+        entries.forEach(function(en){
+          if (!en.isIntersecting) return;
+          var target = en.target;
+          var sibs = target.parentElement
+            ? Array.prototype.slice.call(target.parentElement.children).filter(function(c){ return c.classList.contains('reveal'); })
+            : [target];
+          var i = Math.max(0, sibs.indexOf(target));
+          setTimeout(function(){ target.classList.add('in'); }, i * 90);
+          io.unobserve(target);
+        });
+      }, { threshold: 0.15 });
+      document.querySelectorAll('.reveal').forEach(function(node){ io.observe(node); });
+    }
+    startReveals();
+
+    /* ---- FAQ accordion: one item open at a time ---- */
+    document.querySelectorAll('.faq-q').forEach(function(q){
+      q.addEventListener('click', function(){
+        var item = q.parentElement;
+        var wasOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item.open').forEach(function(o){ o.classList.remove('open'); });
+        if (!wasOpen) item.classList.add('open');
+      });
+    });
+  })();
+</script>
+</body>
+</html>
